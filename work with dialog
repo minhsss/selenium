@@ -1,0 +1,83 @@
+https://stackoverflow.com/questions/42882523/selenium-webdriver-unable-to-get-elements-in-modal
+
+
+
+Selenium Webdriver unable to get elements in Modal
+Ask Question
+Asked 3 years, 1 month ago
+Active 3 years, 1 month ago
+Viewed 6k times
+
+3
+
+
+I am writing a Selenium Webdriver script that is supposed to click on a Link and then this Modal Window pops up.
+
+Modal Window on the page
+
+When I try to access card number field (//input[@id=pan]), I get No such element found exception org.openqa.selenium.NoSuchElementException: no such element: Unable to locate element: {"method":"id","selector":"pan"}
+
+Input control I want to get hold of
+
+This is the code I have tried with no luck:
+
+WebElement modal = driver.findElement(By.xpath("//div[@class='ute-pay-now-modalContent']"));
+driver.switchTo().frame(modal);
+WebElement el =  driver.findElement(By.xpath("//input[@id='pan']"));
+Also tried this:
+
+WebElement modal = driver.findElement(By.className("ute-pay-now-modalContent"));
+driver.switchTo().frame(modal);
+WebElement el =  driver.findElement(By.xpath("//input[@id='pan']"));
+Also tried this:
+
+WebDriverWait block = new WebDriverWait(driver,10);
+WebElement modal = block.until(ExpectedConditions.visibilityOfElementLocated(By.className("ute-pay-now-modalContent")));
+WebElement pan;
+pan    = modal.findElement(By.id("pan"));
+Also tried this:
+
+driver.switchTo().defaultContent();
+Also tried this:
+
+driver.switchTo().activeElement();
+Can someone please help suggest me how to resolve this issue?
+
+selenium selenium-webdriver modal-dialog
+shareimprove this questionfollow
+edited Mar 19 '17 at 14:39
+asked Mar 19 '17 at 3:16
+
+rohit12sh
+56211 gold badge44 silver badges1717 bronze badges
+You've defined modal variable, but trying to switch to model ("modEl" != "modAl"). Also note that div with ute-pay-now-modalContent class name is not an iframe, so you shouldn't use switchTo().frame(). Share page URL if possible – Andersson Mar 19 '17 at 8:23
+@Andersson: I have corrected the typo. If I can't use Frame because it is Modal, then how do I get input fields from the Modal? I haven't have the luck yet. It is a very common scenario that Selenium might be handling already in someway that I can't find out. – rohit12sh Mar 19 '17 at 14:41
+Can you share page URL? – Andersson Mar 19 '17 at 14:46
+@Andersson: Not sure how would it help because the page I am talking about is secure and needs login (unable to share my credential). But here you go: rogers.com/web/totes/#/signin – rohit12sh Mar 19 '17 at 14:58
+Share exception you get with modal = block.until(ExpectedConditions.visibilityOfElementLocated(By.className("ute-pay-now-modalContent"))); modal.findElement(By.id("pan")); – Andersson Mar 19 '17 at 15:12
+show 1 more comment
+1 Answer
+Active
+Oldest
+Votes
+
+2
+
+It seem that <div class="ute-pay-‌​now-modalContent"> contains iframe#sema with required input field. Try below code and let me know the result:
+
+WebDriverWait block = new WebDriverWait(driver,10);
+block.until(ExpectedConditions.visibilityOfElementLocated(By.className("ute-pay-now-modalContent")));
+driver.switchTo().frame("sema");
+WebElement pan;
+pan = modal.findElement(By.id("pan"));
+shareimprove this answerfollow
+answered Mar 19 '17 at 15:29
+
+Andersson
+43.5k1111 gold badges4646 silver badges8181 bronze badges
+Interesting. This seems to be working in getting me the "pan" element! How do you find out about "sema" frame? Because I am getting same issue for other elements on the same modal. Do I need to switch frame before getting each element, or I should be able to get all elements in Modal after one time switch. – rohit12sh Mar 19 '17 at 17:00
+2
+You can check that input is descendant of <iframe id="sema">. This is embedded HTML document. To handle elements inside iframe you have to switch to it first. If after handling input you need to handle other elements outside iframe you should switch back to main document driver.switchTo().defaultContent();. – Andersson Mar 19 '17 at 17:14
+ahhh, Nice! Learned something new. Thank you @Anderson – rohit12sh Mar 19 '17 at 17:42
+[Obsolete("The ExpectedConditions implementation in the .NET bindings is deprecated and will be removed in a future release. This portion of the code has been migrated to the DotNetSeleniumExtras repository on GitHub (github.com/DotNetSeleniumTools/… ExpectedConditions implementation in the .NET bindings is deprecated and will be removed in a future release. This portion of the code has been migrated to the DotNetSeleniumExtras repository on GitHub (github.com/DotNetSeleniumTools/DotNetSeleniumExtras)")] – JDennis Jul 6 '18 at 16:14
+Because ExpectedConditions is marked as obsolete and that it is being moved to another library, I had to find another long-term solution. Instead of trying to access the modal, I simply used Driver.Navigate.GoToUrl(...) to navigate directly to the content. Using Driver.Navigate.Back() returned me back to the previous content; however, it may be necessary to perform multiple back calls.
